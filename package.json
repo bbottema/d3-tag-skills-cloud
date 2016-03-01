@@ -1,0 +1,31 @@
+{
+  "name": "d3-tag-skills-cloud",
+  "version": "1.0.0",
+  "description": "",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/bbottema/d3-tag-skills-cloud"
+  },
+  "keywords": [
+    "tagcloud",
+    "tags",
+    "cloud",
+    "d3",
+    "skills"
+  ],
+  "author": {
+    "name": "Benny Bottema",
+    "email": "benny@bennybottema.com",
+    "url": "http://bennybottema.com"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/bbottema/d3-tag-skills-cloud/issues"
+  },
+  "homepage": "https://github.com/bbottema/d3-tag-skills-cloud",
+  "dependencies": {
+    "d3": "3.5.16",
+    "d3-cloud": "1.2.1",
+    "lodash": "4.5.1"
+  }
+}
