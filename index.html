@@ -39,7 +39,7 @@
                 .size([width, height])
                 .words(skillsToDraw)
                 .rotate(function() {
-                    return (~~(Math.random() * 5) - 2.5) * 30;
+                    return (~~(Math.random() * 6) - 2.5) * 30;
                 })
                 .font("Impact")
                 .fontSize(function(d) {
@@ -92,10 +92,10 @@
                 // translate years scale to font size scale and apply relevancy factor
                 var lineairSize = (((years - minyears) / (maxyears - minyears)) * (maxfont - minfont) * relevancy) + minfont;
                 // make the difference between small sizes and bigger sizes more pronounced for effect
-                var polarizedSize = ~~Math.pow(lineairSize / 8, 3);
+                var polarizedSize = Math.pow(lineairSize / 8, 3);
                 // reduce the size as the retry cycles ramp up (due to too many words in too small space)
                 var reduceSize = polarizedSize * ((MAX_TRIES - retryCycle) / MAX_TRIES);
-                return reduceSize;
+                return ~~reduceSize;
             }
 
             function drawSkillCloud(words) {
