@@ -1,140 +1,143 @@
 <!DOCTYPE html>
-<meta charset="utf-8">
-<head>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
     <title>Searchable Skill Cloud Demo</title>
 </head>
-<body>
-    <script src="./node_modules/d3/d3.min.js"></script>
-    <script src="./node_modules/d3-cloud/build/d3.layout.cloud.js"></script>
-    <script src="./node_modules/lodash/lodash.min.js"></script>
-    <script src="./skills.js"></script>
-
-    <input id="filter" type="text" onkeyup="generateSkillCloud()" placeholder="Type a skill..." />
-
-    <div id="cloud"></div>
-
-    <script>
-        /* global d3, _, skills */
-
-        var minyears = _.min(_.map(skills, 'years'));
-        var maxyears = _.max(_.map(skills, 'years'));
-
-        var minfont = 18;
-        var maxfont = 35;
-
-        var width = 800;
-        var height = 400;
-        
-        var fill = d3.scale.category20();
-        
-        // for small screens (and slow cpu's) limit retries
-        var MAX_TRIES = (width > 400) ? 6 : 3;
-
-        // draw initial cloud wilthout filters
-        generateSkillCloud();
-
-        function generateSkillCloud(retryCycle) {
-            var skillsToDraw = transformToCloudLayoutObjects(filterSkills(skills), retryCycle);
-            d3.layout.cloud()
-                .size([width, height])
-                .words(skillsToDraw)
-                .rotate(function() {
-                    return (~~(Math.random() * 6) - 2.5) * 30;
-                })
-                .font("Impact")
-                .fontSize(function(d) {
-                    return d.size;
-                })
-                .on("end", function(fittedSkills) {
-                    // check if all words fit and are included
-                    if (fittedSkills.length == skillsToDraw.length) {
-                        drawSkillCloud(fittedSkills); // finished
-                    }
-                    else if (!retryCycle || retryCycle < MAX_TRIES) {
-                        // words are missing due to the random placement and limited room space
-                        console.debug('retrying');
-                        // try again and start counting retries
-                        generateSkillCloud((retryCycle || 1) + 1);
-                    }
-                    else {
-                        // retries maxed and failed to fit all the words
-                        console.debug('gave up :(');
-                        // just draw what we have
-                        drawSkillCloud(fittedSkills);
-                    }
-                })
-                .start();
-
-            // filter skills based on user input and transform to
-            function filterSkills(skills) {
-                var textfilter = document.getElementById('filter').value;
-                return _.filter(skills, function(skill) {
-                    return !textfilter || skill.name.toLowerCase().indexOf(textfilter.toLowerCase()) >= 0;
-                });
-            }
-
-            // convert skill objects into cloud layout objects
-            function transformToCloudLayoutObjects(skills, retryCycle) {
-                return _.map(skills, function(skill) {
-                    return {
-                        text: skill.name.toLowerCase() + ':' + skill.years + 'y',
-                        size: toFontSize(skill.years, skill.relevancy, retryCycle)
-                    };
-                });
-            }
-
-            /**
-             * 1. Determine font size based on years of experience relative to the skills with the least and most years of experience.
-             * 2. Further increase / decrease font size based on relevancy (linux 20y is could less relevant than java 3y, so relevancy 
-             *    .2 vs 1.5 could work for example).
-             */
-            function toFontSize(years, relevancy, retryCycle) {
-                // translate years scale to font size scale and apply relevancy factor
-                var lineairSize = (((years - minyears) / (maxyears - minyears)) * (maxfont - minfont) * relevancy) + minfont;
-                // make the difference between small sizes and bigger sizes more pronounced for effect
-                var polarizedSize = Math.pow(lineairSize / 8, 3);
-                // reduce the size as the retry cycles ramp up (due to too many words in too small space)
-                var reduceSize = polarizedSize * ((MAX_TRIES - retryCycle) / MAX_TRIES);
-                return ~~reduceSize;
-            }
-
-            function drawSkillCloud(words) {
-                d3.select("#cloud svg").remove();
-                d3.select("#cloud").append("svg")
-                    .attr("width", width)
-                    .attr("height", height)
-                    .append("g")
-                    .attr("transform", "translate(" + ~~(width / 2) + "," + ~~(height / 2) + ")")
-                    .selectAll("text")
-                    .data(words)
-                    .enter().append("text")
-                    .style("font-size", function(d) {
-                        return d.size + "px";
+    <body>
+        <script src="./node_modules/d3/d3.min.js"></script>
+        <script src="./node_modules/d3-cloud/build/d3.layout.cloud.js"></script>
+        <script src="./node_modules/lodash/lodash.min.js"></script>
+        <script src="./skills.js"></script>
+    
+        <input id="filter" type="text" onkeyup="generateSkillCloud()" placeholder="Type a skill..." />
+    
+        <div id="cloud"></div>
+    
+        <script>
+            /* global d3, _, skills */
+    
+            var minyears = _.min(_.map(skills, 'years'));
+            var maxyears = _.max(_.map(skills, 'years'));
+    
+            var minfont = 18;
+            var maxfont = 35;
+    
+            var width = 800;
+            var height = 400;
+            
+            var fill = d3.scale.category20();
+            
+            // for small screens (and slow cpu's) limit retries
+            var MAX_TRIES = (width > 400) ? 6 : 3;
+    
+            // draw initial cloud wilthout filters
+            generateSkillCloud();
+    
+            function generateSkillCloud(retryCycle) {
+                var skillsToDraw = transformToCloudLayoutObjects(filterSkills(skills), retryCycle);
+                d3.layout.cloud()
+                    .size([width, height])
+                    .words(skillsToDraw)
+                    .rotate(function() {
+                        return (~~(Math.random() * 6) - 2.5) * 30;
                     })
-                    .style("-webkit-touch-callout", "none")
-                    .style("-webkit-user-select", "none")
-                    .style("-khtml-user-select", "none")
-                    .style("-moz-user-select", "none")
-                    .style("-ms-user-select", "none")
-                    .style("user-select", "none")
-                    .style("cursor", "default")
-                    .style("font-family", "Impact")
-                    .style("fill", function(d, i) {
-                        return fill(i);
+                    .font("Impact")
+                    .fontSize(function(d) {
+                        return d.size;
                     })
-                    .attr("text-anchor", "middle")
-                    .attr("transform", function(d) {
-                        return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                    .on("end", function(fittedSkills) {
+                        // check if all words fit and are included
+                        if (fittedSkills.length == skillsToDraw.length) {
+                            drawSkillCloud(fittedSkills); // finished
+                        }
+                        else if (!retryCycle || retryCycle < MAX_TRIES) {
+                            // words are missing due to the random placement and limited room space
+                            console.debug('retrying');
+                            // try again and start counting retries
+                            generateSkillCloud((retryCycle || 1) + 1);
+                        }
+                        else {
+                            // retries maxed and failed to fit all the words
+                            console.debug('gave up :(');
+                            // just draw what we have
+                            drawSkillCloud(fittedSkills);
+                        }
                     })
-                    .text(function(d) {
-                        return d.text;
+                    .start();
+    
+                // filter skills based on user input and transform to
+                function filterSkills(skills) {
+                    var textfilter = document.getElementById('filter').value;
+                    return _.filter(skills, function(skill) {
+                        return !textfilter || skill.name.toLowerCase().indexOf(textfilter.toLowerCase()) >= 0;
                     });
-                    
-                // set the viewbox to content bounding box (zooming in on the content, effectively trimming whitespace)
-                var svg = document.getElementsByTagName("svg")[0];
-                var bbox = svg.getBBox();
-                var viewBox = [bbox.x, bbox.y, bbox.width, bbox.height].join(" ");
-                svg.setAttribute("viewBox", viewBox);
+                }
+    
+                // convert skill objects into cloud layout objects
+                function transformToCloudLayoutObjects(skills, retryCycle) {
+                    return _.map(skills, function(skill) {
+                        return {
+                            text: skill.name.toLowerCase() + ':' + skill.years + 'y',
+                            size: toFontSize(skill.years, skill.relevancy, retryCycle)
+                        };
+                    });
+                }
+    
+                /**
+                 * 1. Determine font size based on years of experience relative to the skills with the least and most years of experience.
+                 * 2. Further increase / decrease font size based on relevancy (linux 20y is could less relevant than java 3y, so relevancy 
+                 *    .2 vs 1.5 could work for example).
+                 */
+                function toFontSize(years, relevancy, retryCycle) {
+                    // translate years scale to font size scale and apply relevancy factor
+                    var lineairSize = (((years - minyears) / (maxyears - minyears)) * (maxfont - minfont) * relevancy) + minfont;
+                    // make the difference between small sizes and bigger sizes more pronounced for effect
+                    var polarizedSize = Math.pow(lineairSize / 8, 3);
+                    // reduce the size as the retry cycles ramp up (due to too many words in too small space)
+                    var reduceSize = polarizedSize * ((MAX_TRIES - retryCycle) / MAX_TRIES);
+                    return ~~reduceSize;
+                }
+    
+                function drawSkillCloud(words) {
+                    d3.select("#cloud svg").remove();
+                    d3.select("#cloud").append("svg")
+                        .attr("width", width)
+                        .attr("height", height)
+                        .append("g")
+                        .attr("transform", "translate(" + ~~(width / 2) + "," + ~~(height / 2) + ")")
+                        .selectAll("text")
+                        .data(words)
+                        .enter().append("text")
+                        .style("font-size", function(d) {
+                            return d.size + "px";
+                        })
+                        .style("-webkit-touch-callout", "none")
+                        .style("-webkit-user-select", "none")
+                        .style("-khtml-user-select", "none")
+                        .style("-moz-user-select", "none")
+                        .style("-ms-user-select", "none")
+                        .style("user-select", "none")
+                        .style("cursor", "default")
+                        .style("font-family", "Impact")
+                        .style("fill", function(d, i) {
+                            return fill(i);
+                        })
+                        .attr("text-anchor", "middle")
+                        .attr("transform", function(d) {
+                            return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+                        })
+                        .text(function(d) {
+                            return d.text;
+                        });
+                        
+                    // set the viewbox to content bounding box (zooming in on the content, effectively trimming whitespace)
+                    var svg = document.getElementsByTagName("svg")[0];
+                    var bbox = svg.getBBox();
+                    var viewBox = [bbox.x, bbox.y, bbox.width, bbox.height].join(" ");
+                    svg.setAttribute("viewBox", viewBox);
+                }
             }
-        }
-    </script>
+        </script>
+    </body>
+</html>
